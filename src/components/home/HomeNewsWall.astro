@@ -1,0 +1,150 @@
+---
+// ARCHETYPE · news-wall — kiosk. (Owner reference: "Digital Marmalade".)
+// Soft light-grey ground; a slim brand-red side rail with vertical nav; a centred
+// section title + centred search field; then a uniform wall of paper-white cards, each
+// with a SHORT THICK ACCENT TICK at its top edge (per-topic colour), a condensed-caps
+// headline sitting in generous whitespace, and a tiny muted tag line at the bottom.
+import {withBase} from '../../lib/withBase';
+import type { HomeProps } from '../../lib/home';
+import { fmtDate } from '../../lib/home';
+
+const { posts, masthead, postsHref, aboutHref, observatoryHref, postsTitle, topicsLabel, aboutLabel } =
+  Astro.props as HomeProps;
+---
+<div class="nw">
+  <aside class="nw-rail">
+    <a class="nw-rail-brand" href={withBase('/')}>{masthead}</a>
+    <nav class="nw-rail-nav" aria-label="Sections">
+      <a href={postsHref}>{postsTitle}</a>
+      <a href={observatoryHref}>{topicsLabel}</a>
+      <a href={aboutHref}>{aboutLabel}</a>
+    </nav>
+  </aside>
+
+  <div class="nw-main">
+    <header class="nw-head">
+      <p class="nw-eyebrow">On the stand today</p>
+      <h1 class="nw-title">{postsTitle}</h1>
+      <div class="nw-search">
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" /></svg>
+        <input type="search" placeholder="Search the stand…" aria-label="Search posts" />
+      </div>
+    </header>
+
+    <p class="nw-results" role="status" aria-live="polite"></p>
+    <div class="nw-wall">
+      {posts.map((p,i) => (
+        <a class={`nw-card${i===0?' nw-lead':''}`} data-search={`${p.title} ${p.description} ${p.topic?.name||''}`.toLocaleLowerCase()} href={p.href} style={`--tick:${p.topic?.color || p.accent}`}>
+          <span class="nw-tick" aria-hidden="true"></span>
+          {p.topic && <span class="nw-cat">{p.topic.name}</span>}
+          {p.image&&<img class="nw-image" src={p.image.src} alt={p.image.alt} loading={i===0?'eager':'lazy'} decoding="async"/>}
+          <h2 class="nw-headline">{p.title}</h2>
+          <p class="nw-description">{p.description}</p>
+          <span class="nw-foot">
+            <time datetime={p.date.toISOString()}>{fmtDate(p.date)}</time>
+            <span class="nw-dot" aria-hidden="true">•</span>
+            <span>{p.readMins} min read</span>
+          </span>
+        </a>
+      ))}
+    </div>
+  </div>
+</div>
+
+<style>
+ .nw-image{width:100%;aspect-ratio:16/9;object-fit:cover;margin-bottom:1rem}.nw-description{font-size:.95rem;line-height:1.6;color:#56534c;margin:1rem 0}.nw-card.nw-lead{grid-column:span 2;background:#fffdf6;border-top:4px solid #1d1d1b;min-height:20rem}.nw-lead .nw-headline{font-size:clamp(1.8rem,3.3vw,3rem)}.nw-lead .nw-image{max-height:240px}.nw-results{max-width:1180px;margin:0 auto 1rem;font-size:.85rem;color:#56534c}.nw-card[hidden]{display:none!important}.nw-search input{min-width:0}.nw-card{border-radius:0!important;box-shadow:none!important}
+ @media(max-width:700px){.nw-card.nw-lead{grid-column:auto;min-height:0}}
+
+  .nw { display: grid; grid-template-columns: 3.5rem 1fr; background: #e9e8e4; min-height: calc(100vh - var(--header-h)); }
+
+  /* slim brand-colour side rail */
+  .nw-rail {
+    position: sticky; top: var(--header-h); align-self: start; height: calc(100vh - var(--header-h));
+    background: var(--accent); color: #fff;
+    display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+    padding: 1.2rem 0 1.4rem;
+  }
+  .nw-rail-brand {
+    writing-mode: vertical-rl; transform: rotate(180deg);
+    font-family: var(--font-display); font-weight: 900; text-transform: uppercase;
+    letter-spacing: 0.06em; font-size: 0.86rem; color: #fff; cursor: pointer;
+    max-height: 46vh; overflow: hidden; white-space: nowrap;
+  }
+  .nw-rail-nav { display: flex; flex-direction: column; align-items: center; gap: 1.1rem; }
+  .nw-rail-nav a {
+    writing-mode: vertical-rl;
+    font-family: var(--font-display); font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.08em; font-size: 0.66rem; color: rgba(255,255,255,0.82);
+    cursor: pointer; transition: color 0.2s;
+  }
+  .nw-rail-nav a:hover { color: #fff; }
+
+  .nw-main { padding: clamp(1.6rem, 4vw, 3rem) clamp(1rem, 4vw, 3rem) 4rem; min-width: 0; }
+
+  .nw-head { text-align: center; max-width: 640px; margin: 0 auto clamp(1.6rem, 4vw, 2.6rem); }
+  .nw-eyebrow { font-family: var(--font-display); font-weight: 700; text-transform: uppercase; letter-spacing: 0.16em; font-size: 0.72rem; color: var(--accent); }
+  .nw-title {
+    font-family: 'Space Grotesk Variable', 'Space Grotesk', sans-serif; font-weight: 700;
+    text-transform: uppercase; letter-spacing: -0.02em; line-height: 0.98;
+    font-size: clamp(2.6rem, 7vw, 4.6rem); color: #16150f; margin: 0.4rem 0 1.3rem;
+    transform: scaleX(0.95); transform-origin: center;
+  }
+  .nw-search {
+    display: inline-flex; align-items: center; gap: 0.55rem; width: min(420px, 100%);
+    background: #fff; border: 1px solid rgba(0,0,0,0.14); border-radius: 999px;
+    padding: 0.6rem 1.1rem; color: #7a766c; box-shadow: 0 1px 0 rgba(0,0,0,0.04);
+  }
+  .nw-search input { flex: 1; border: 0; background: none; font: inherit; font-size: 0.95rem; color: #16150f; outline: none; }
+  .nw-search input::placeholder { color: #9a958a; }
+  .nw-search:focus-within { border-color: var(--accent); }
+
+  /* uniform wall of paper cards */
+  .nw-wall {
+    /* min(230px,100%) keeps the auto-fill grid from blowing out its min-content
+       width on phones (grid items otherwise refuse to shrink under 4 tracks). */
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(min(230px, 100%), 1fr));
+    gap: 1.1rem; max-width: 1180px; margin-inline: auto;
+  }
+  .nw-card {
+    position: relative; display: flex; flex-direction: column; min-height: 210px;
+    background: #fff; border: 1px solid rgba(0,0,0,0.08); border-radius: 6px;
+    padding: 1.7rem 1.3rem 1.15rem; overflow: hidden; cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .nw-tick { position: absolute; top: 0; left: 0; height: 6px; width: 44px; background: var(--tick, var(--accent)); }
+  .nw-card:hover { transform: translateY(-3px); box-shadow: 0 12px 26px rgba(0,0,0,0.12); }
+  .nw-cat { font-family: var(--font-display); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.64rem; color: var(--tick, var(--accent)); }
+  .nw-headline {
+    font-family: 'Space Grotesk Variable', 'Space Grotesk', sans-serif; font-weight: 700;
+    text-transform: uppercase; letter-spacing: -0.01em; line-height: 1.02;
+    font-size: 1.32rem; color: #16150f; margin: 0.5rem 0 auto;
+    transform: scaleX(0.96); transform-origin: left;
+  }
+  .nw-foot { display: flex; align-items: center; gap: 0.45rem; margin-top: 1.1rem; font-family: var(--font-display); font-variant-numeric: tabular-nums; font-size: 0.72rem; color: #9a958a; }
+  .nw-dot { color: var(--tick, var(--accent)); }
+
+  @media (max-width: 640px) {
+    .nw { grid-template-columns: 1fr; }
+    .nw-rail {
+      position: static; height: auto; flex-direction: row; justify-content: space-between;
+      padding: 0.7rem 1rem;
+      /* let the brand + nav row wrap so its min-content never widens the page */
+      flex-wrap: wrap; row-gap: 0.35rem; min-width: 0;
+    }
+    .nw-rail-brand { writing-mode: horizontal-tb; transform: none; max-height: none; font-size: 1rem; white-space: normal; }
+    .nw-rail-nav { flex-direction: row; flex-wrap: wrap; gap: 0.4rem 1rem; }
+    .nw-rail-nav a { writing-mode: horizontal-tb; }
+    .nw-title { font-size: clamp(2.2rem, 12vw, 3rem); }
+  }
+</style>
+
+<script>
+function setupStand(){
+ const input=document.querySelector<HTMLInputElement>('.nw-search input');
+ const status=document.querySelector<HTMLElement>('.nw-results');
+ const cards=[...document.querySelectorAll<HTMLElement>('.nw-card')];
+ if(!input||!status||input.dataset.ready)return;input.dataset.ready='true';
+ input.addEventListener('input',()=>{const query=input.value.trim().toLocaleLowerCase();let count=0;for(const card of cards){card.hidden=!!query&&!card.dataset.search?.includes(query);if(!card.hidden)count++;}status.textContent=query?(count?`${count} ${count===1?'article':'articles'} found`:'No articles found. Try another search.'):' ';});
+}
+setupStand();document.addEventListener('astro:page-load',setupStand);
+</script>

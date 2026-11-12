@@ -1,0 +1,19 @@
+---
+// The legacy `polaroid` id remains stable; Postcards replaces the repetitive paper pile.
+import type {HomeProps} from '../../lib/home';
+import {fmtDate,pad2} from '../../lib/home';
+const {posts,masthead,tagline,postsHref,postsTitle}=Astro.props as HomeProps;
+---
+<section class="postcards">
+ <header><p class="pc-kicker">A collection of {postsTitle.toLowerCase()}</p><h1>{masthead}</h1><p class="pc-tagline">{tagline}</p></header>
+ <div class="pc-stack">{posts.slice(0,8).map((p,i)=><article class="pc-card">
+  <a class="pc-picture" href={p.href} aria-label={p.title}>{p.image?<img src={p.image.src} alt={p.image.alt} loading={i===0?'eager':'lazy'} decoding="async"/>:<span aria-hidden="true">{pad2(i+1)}</span>}</a>
+  <div class="pc-letter"><div class="pc-postmark"><time datetime={p.date.toISOString()}>{fmtDate(p.date)}</time><span>{p.readMins} min read</span></div>{p.topic&&<p class="pc-kicker">{p.topic.name}</p>}<h2><a href={p.href}>{p.title}</a></h2><p>{p.description}</p><a class="pc-read" href={p.href}>Read this postcard ↗</a></div>
+ </article>)}</div>
+ {!posts.length&&<p class="pc-empty">The first postcard will appear here.</p>}
+ <footer><a href={postsHref}>All {postsTitle.toLowerCase()} ↗</a></footer>
+</section>
+<style>
+.postcards{width:min(1120px,100% - 2.5rem);margin:auto;padding:3rem 0 5rem;color:#332c25}.postcards>header{border-bottom:2px solid #332c25;padding-bottom:2rem;margin-bottom:3rem}.postcards h1{font:400 clamp(3rem,6vw,6rem)/1.05 Georgia,serif;letter-spacing:-.05em;margin:1rem 0}.pc-kicker{font:600 .7rem/1.4 ui-monospace,monospace;letter-spacing:.15em;text-transform:uppercase;color:#735641}.pc-tagline{font-size:1.1rem;max-width:38rem;line-height:1.6}.pc-stack{display:grid;gap:3rem}.pc-card{display:grid;grid-template-columns:1fr 1fr;border:1px solid #c7bba9;background:#fffcf5;box-shadow:0 4px 0 #ddd3c3}.pc-card:nth-child(even) .pc-picture{order:2}.pc-picture{display:grid;place-items:center;background:#e5ddcf;min-height:320px;margin:1rem;overflow:hidden;color:#85664b}.pc-picture img{width:100%;height:100%;max-height:460px;object-fit:cover}.pc-picture>span{font:400 6rem Georgia,serif}.pc-letter{padding:2rem;border-left:1px dashed #c7bba9;margin-block:1.5rem}.pc-postmark{display:flex;justify-content:space-between;gap:1rem;font:500 .7rem/1.5 ui-monospace,monospace;border-block:1px solid #bbaa94;padding:.6rem 0;margin-bottom:2rem;flex-wrap:wrap}.pc-letter h2{font:400 clamp(1.7rem,2.6vw,2.5rem)/1.12 Georgia,serif;letter-spacing:-.025em;margin:1rem 0}.pc-letter a{color:inherit}.pc-letter>p:not(.pc-kicker){font-size:1rem;line-height:1.65;color:#64584b}.pc-read{display:inline-block;border-bottom:1px solid;padding:.5rem 0;font-size:.85rem}.postcards a:focus-visible{outline:3px solid #735641;outline-offset:4px}.postcards>footer{border-top:1px solid #bbaa94;margin-top:3rem;padding-top:1.5rem;text-align:right}.postcards>footer a{color:#503c2e}.pc-empty{padding:3rem 0}
+@media(max-width:700px){.pc-card{grid-template-columns:1fr}.pc-card:nth-child(even) .pc-picture{order:0}.pc-picture{min-height:200px}.pc-picture img{max-height:300px;aspect-ratio:4/3}.pc-letter{border-left:0;border-top:1px dashed #c7bba9;margin:0 1rem;padding:1.5rem .5rem}.pc-postmark{margin-bottom:1.5rem}}
+</style>

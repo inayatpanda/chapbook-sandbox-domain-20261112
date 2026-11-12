@@ -1,0 +1,7 @@
+---
+import {serviceMenuHtml} from '../../lib/business/render.mjs';
+import {withBase} from '../../lib/withBase';
+const {services=[]}=Astro.props;
+const based=services.map((s:any)=>s.image&&s.image.src.startsWith('/')?{...s,image:{...s.image,src:withBase(s.image.src)}}:s);
+---
+<Fragment set:html={serviceMenuHtml(based)}/>

@@ -1,0 +1,145 @@
+---
+// A page built in Chapbook's page editor. The same renderer runs in the editor's preview.
+import Base from '../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+import { renderPage } from '../lib/pages/render.mjs';
+import { baseColours } from '../lib/pages/site-pages';
+import { site } from '../lib/site';
+import { withBase } from '../lib/withBase';
+import { safeBookingUrl } from '../lib/professional.mjs';
+import { fmtDate } from '../lib/home';
+import { postCover } from '../lib/post-cover.mjs';
+import '../styles/blocks.css';
+import '../styles/motion.css';
+import profile from '../data/profile.json';
+const { page, title, description } = Astro.props;
+const endpoint = safeBookingUrl((site as any).contact?.endpoint);
+let blocks = page.blocks;
+// A block Contact page always keeps a way to send a message.
+const hasForm = blocks.some((b: any) => b.type === 'form' || (b.type === 'columns' && (b.data?.children || []).some((k: any) => k.type === 'form')));
+if (page.slug === 'contact' && endpoint && !endpoint.includes('/your-id') && !hasForm) {
+  blocks = [...blocks, { id: 'contactform', type: 'form', variant: 'normal', style: {}, data: { heading: 'Send a message', button: 'Send message' } }];
+}
+let posts: any[] = [];
+if (blocks.some((b: any) => b.type === 'posts')) {
+  const coverModules = import.meta.glob('../content/blog/_images/**/*.{jpg,jpeg,png,webp,avif,gif,svg}', { eager: true, query: '?url', import: 'default' });
+  const coverAssets = Object.fromEntries(Object.entries(coverModules).map(([path, url]) => [path.replace('../content/blog/', ''), url]));
+  posts = (await getCollection('blog', ({ data }: any) => !data.draft))
+    .sort((a: any, b: any) => b.data.date.valueOf() - a.data.date.valueOf()).slice(0, 6)
+    .map((p: any) => ({ href: withBase(`/blog/${p.slug}/`), title: p.data.title, description: p.data.description, dateLabel: fmtDate(p.data.date), image: postCover(p.data, p.body, coverAssets, import.meta.env.BASE_URL) }));
+}
+const html = renderPage({ ...page, blocks }, {
+  site, posts, base: baseColours(), formEndpoint: endpoint,
+  fallbackEmail: (profile as any).email && (profile as any).email !== 'you@example.com' ? (profile as any).email : '',
+  href: (p: string) => withBase(p), postsHref: withBase('/posts/'),
+});
+---
+<Base title={title ?? page.title} description={description ?? (page.description || undefined)}>
+  <slot />
+  {/* Tell the stylesheet a script is on its way. Until it says so nothing on the page moves by
+      itself (there would be no Pause button), and things that will arrive on scroll don't flash
+      first. If the script never starts, the page goes back to plain and still within 3s. */}
+  {/* The same for the booking bar and the order list (cba-js): they show from the first paint,
+      and if their script never starts, their plain buttons come back within 3s. */}
+  <script is:inline data-astro-rerun>document.documentElement.classList.add('cbm-js','cba-js');setTimeout(function(){if(!window.__cbm)document.documentElement.classList.remove('cbm-js');if(!window.__cba)document.documentElement.classList.remove('cba-js')},3000)</script>
+  <Fragment set:html={html} />
+</Base>
+
+<script>
+  // Movement: things arriving on scroll, counting numbers, pointer effects and the Pause button.
+  import { startPageMotion } from '../scripts/page-motion.js';
+  startPageMotion();
+  // The booking bar in the opening and the order list. Not movement: it runs for everyone.
+  import { startPageActions } from '../scripts/page-actions.js';
+  startPageActions();
+
+  // Block contact forms send without leaving the site and show the result in place.
+  function bindBlockForms() {
+    for (const form of document.querySelectorAll<HTMLFormElement>('.cbp .cb-form')) {
+      const status = form.nextElementSibling as HTMLElement | null;
+      if (form.dataset.bound || !status?.classList.contains('cb-form-status')) continue;
+      form.dataset.bound = '1';
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = form.querySelector<HTMLButtonElement>('button[type="submit"]');
+        const label = btn?.textContent || 'Send message';
+        if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
+        status.hidden = true;
+        try {
+          const res = await fetch(form.action, { method: 'POST', body: new FormData(form), headers: { Accept: 'application/json' } });
+          if (!res.ok) throw new Error('send');
+          form.hidden = true;
+          status.textContent = 'Thank you. Your message has been sent.';
+        } catch {
+          status.textContent = 'Your message could not be sent. Please try again, or use the email address on this page.';
+          if (btn) { btn.disabled = false; btn.textContent = label; }
+        }
+        status.hidden = false;
+      });
+    }
+  }
+  bindBlockForms();
+  document.addEventListener('astro:page-load', bindBlockForms);
+
+  // Booking calendars load only when a visitor asks for them.
+  let calLoading: Promise<void> | undefined;
+  function loadCal() {
+    if (calLoading) return calLoading;
+    calLoading = new Promise<void>((resolve, reject) => {
+      if ((window as any).Cal?.instance) { resolve(); return; }
+      const cal: any = (...args: any[]) => cal.q.push(args); cal.q = []; cal.ns = {}; (window as any).Cal = cal;
+      const script = document.createElement('script'); script.src = 'https://app.cal.com/embed/embed.js'; script.async = true;
+      const timer = setTimeout(() => { script.remove(); calLoading = undefined; reject(new Error('timeout')); }, 15000);
+      script.onload = () => { clearTimeout(timer); if ((window as any).Cal?.instance) resolve(); else { calLoading = undefined; reject(new Error('initialise')); } };
+      script.onerror = () => { clearTimeout(timer); script.remove(); calLoading = undefined; reject(new Error('load')); };
+      document.head.append(script);
+    });
+    return calLoading;
+  }
+  function bindBooking() {
+    for (const box of document.querySelectorAll<HTMLElement>('.cbp .cb-booking-cal')) {
+      const button = box.querySelector<HTMLButtonElement>('.cb-booking-load'), frame = box.querySelector<HTMLElement>('.cb-booking-frame'), status = box.querySelector<HTMLElement>('.cb-booking-status');
+      if (!button || !frame || !status || box.dataset.bound) continue;
+      box.dataset.bound = '1';
+      button.addEventListener('click', async () => {
+        const kind = box.dataset.bookingKind, src = box.dataset.bookingSrc || '';
+        button.disabled = true; status.textContent = 'Loading the booking calendar…';
+        try {
+          if (kind === 'google' && /^https:\/\/calendar\.google\.com\/calendar\/appointments\/schedules\//.test(src)) {
+            const f = document.createElement('iframe'); f.src = src; f.title = 'Booking calendar'; f.loading = 'lazy';
+            frame.replaceChildren(f);
+          } else if (kind === 'cal') {
+            await loadCal();
+            const cal = (window as any).Cal; if (typeof cal !== 'function') throw new Error('unavailable');
+            frame.id ||= `booking-${Math.random().toString(36).slice(2, 8)}`;
+            cal('init', { origin: 'https://cal.com' });
+            cal('inline', { elementOrSelector: `#${frame.id}`, calLink: src, config: { layout: 'month_view' } });
+          } else throw new Error('unknown');
+          frame.hidden = false; button.hidden = true;
+          status.textContent = 'Choose a time in the calendar. If it does not appear, use the link above.';
+        } catch {
+          button.disabled = false;
+          status.textContent = 'The booking calendar could not load. Use the link above to book on its own page.';
+        }
+      });
+    }
+  }
+  bindBooking();
+  document.addEventListener('astro:page-load', bindBooking);
+
+  // Videos behind the opening words: a pause button, and no movement for people who ask for less.
+  function bindHeroVideos() {
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    for (const v of document.querySelectorAll<HTMLVideoElement>('.cbp .cb-hero-bg video')) {
+      const btn = v.closest('.cb')?.querySelector<HTMLButtonElement>('.cb-video-toggle');
+      if (still) { v.pause(); v.removeAttribute('autoplay'); }
+      if (!btn || btn.dataset.bound) continue;
+      btn.dataset.bound = '1';
+      const show = () => { btn.textContent = v.paused ? 'Play' : 'Pause'; btn.setAttribute('aria-label', v.paused ? 'Play the video' : 'Pause the video'); };
+      btn.addEventListener('click', () => { if (v.paused) v.play().catch(() => {}); else v.pause(); show(); });
+      v.addEventListener('play', show); v.addEventListener('pause', show); show();
+    }
+  }
+  bindHeroVideos();
+  document.addEventListener('astro:page-load', bindHeroVideos);
+</script>

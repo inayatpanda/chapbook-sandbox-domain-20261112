@@ -1,0 +1,490 @@
+---
+import '@fontsource-variable/space-grotesk';
+import '@fontsource-variable/inter';
+import '../styles/fonts.css';
+import '../styles/global.css';
+import '../styles/themes.css';
+import '../styles/headers.css';
+import SiteHeader from '../components/SiteHeader.astro';
+import { ViewTransitions } from 'astro:transitions';
+import Icon from '../components/Icon.astro';
+import { site, pageTitle } from '../lib/site';
+import { withBase } from '../lib/withBase';
+import { vocabFor } from '../lib/vocab';
+import { designCss } from '../lib/business/render.mjs';
+import {professionalDetails, safeNavHref, safeBookingUrl} from '../lib/professional.mjs';
+import themesRegistry from '../data/themes.json';
+
+// Site-wide BLOG THEME (data-blog-theme on <html>). Chosen once at blog creation
+// via site.defaultTheme; the composer writes one of the ids in src/data/themes.json.
+// Unknown/absent → the base "observatory" look (existing blogs unchanged).
+// (QA note: Astro static mode strips URL search params — even in dev — so per-theme
+// screenshots work by mutating site.json defaultTheme; see .qa/qa-run.mjs.)
+const blogTheme = site.defaultTheme || 'observatory';
+
+// Kids themes ship two extras (see src/styles/themes/_kids-extras.css): a floating
+// dyslexia-friendly reading toggle and a one-time starburst on the newest post card.
+const KIDS_THEMES = ['doodle', 'rocket', 'pixel', 'comic'];
+const isKidsTheme = KIDS_THEMES.includes(blogTheme);
+
+// Build footer socials from site.json (non-empty values only)
+const socialLinks = [
+  safeBookingUrl(site.socials.linkedin) && { name: 'LinkedIn', url: safeBookingUrl(site.socials.linkedin), icon: 'brand-linkedin' },
+  safeBookingUrl(site.socials.instagram) && { name: 'Instagram', url: safeBookingUrl(site.socials.instagram), icon: 'brand-instagram' },
+  safeBookingUrl(site.socials.github) && { name: 'GitHub', url: safeBookingUrl(site.socials.github), icon: 'brand-github' },
+].filter(Boolean) as { name: string; url: string; icon: string }[];
+
+interface Props {
+  title?: string;
+  description?: string;
+  progress?: boolean;
+  /** Absolute or root-relative share image. Defaults to the branded /og-default.png. */
+  ogImage?: string;
+  /** 'website' for pages, 'article' for blog posts. */
+  ogType?: 'website' | 'article';
+}
+const {
+  title,
+  description = site.description,
+  progress = false,
+  ogImage = '/og-default.png',
+  ogType = 'website',
+} = Astro.props;
+
+// Canonical + absolute share-image URLs, resolved against `site` in astro.config.
+// Astro.url.pathname already carries the configured base; the share image is a
+// root-absolute path we pass in, so base-prefix it (no-op at base '/').
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
+const ogImageUrl = new URL(withBase(ogImage), Astro.site).href;
+
+// `primary` items show as a single quick-access row on mobile; the hamburger holds
+// the full menu. Order is deliberate: Home, Observatory, Writing, Darkroom, then the rest.
+// Nav is data-driven from site.json (`site.nav`); NAV_FALLBACK reproduces today's nav
+// exactly so a site that omits `nav` is visually unchanged. The Observatory item carries
+// `themeLabel: true` — applyThemeTerms() renames it per active theme; all other items
+// emit `data-fixed-label` so the theme renamer skips them.
+const NAV_FALLBACK = [
+  { href: '/', label: 'Home', primary: true },
+  { href: '/observatory/', label: 'Observatory', primary: true, themeLabel: true },
+  { href: '/posts/', label: 'Posts', primary: true },
+  { href: '/darkroom/', label: 'Darkroom', primary: true },
+  { href: '/apps/', label: 'Apps' },
+  { href: '/about/', label: 'About' },
+  { href: '/contact/', label: 'Contact' },
+];
+const nav = [...(site.nav && site.nav.length ? site.nav : NAV_FALLBACK)].map((n: any) => ({ ...n, href: safeNavHref(n?.href) })).filter((n: any) => n.href);
+const siteDesignCss = designCss((site as any).design, (themesRegistry.themes as any[]).find((t) => t.id === site.defaultTheme)?.preview || {});
+const professional = professionalDetails(site.professional);
+if (professional.bookingUrl && !nav.some(n => n.href === '/appointments/')) nav.push({href:'/appointments/',label:vocabFor(site.defaultTheme).bookingNav,primary:true});
+
+// Per-theme chrome vocabulary. On the observatory theme the nav keeps its house labels
+// (and the palette switcher's client renamer handles "Observatory"); every other theme
+// relabels the writing/topics/about links in its own voice (server-side, so it's stable
+// and doesn't flash). Slugs/hrefs are unchanged — only the visible text.
+const vocab = vocabFor(blogTheme);
+const navLabel = (n: { href: string; label: string; themeLabel?: boolean }): string => {
+  if (blogTheme === 'observatory') return n.label;
+  if (n.themeLabel) return vocab.topicsLabel;
+  if (n.href === '/about/') return vocab.aboutLabel;
+  if (n.href === '/posts/') return vocab.postsTitle;
+  return n.label;
+};
+const featureNavLabel = blogTheme === 'observatory' ? 'Observatory' : vocab.topicsLabel;
+const postsNavLabel = blogTheme === 'observatory' ? 'Posts' : vocab.postsTitle;
+const aboutNavLabel = blogTheme === 'observatory' ? 'About' : vocab.aboutLabel;
+const basePath = import.meta.env.BASE_URL.replace(/\/$/, '');
+const path = Astro.url.pathname.slice(basePath.length) || '/';
+const isCurrent = (href: string) => {
+  if (href === '/') return path === '/';
+  // "Posts" owns the archive, individual posts and constellation pages.
+  if (href === '/posts/') return path.startsWith('/posts') || path.startsWith('/writing') || path.startsWith('/blog') || path.startsWith('/c/');
+  return path.startsWith(href);
+};
+---
+<!doctype html>
+<html lang="en-GB" data-blog-theme={blogTheme}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#04060c" />
+    {/* Kids dyslexia mode — apply the saved choice before paint (no flash) */}
+    {isKidsTheme && (
+      <script is:inline>
+        (function(){ try { if (localStorage.getItem('kids-dyslexia') === '1') document.documentElement.dataset.dyslexia = '1'; } catch (e) {} })();
+      </script>
+    )}
+    {site.logo?.favicon
+      ? <link rel="icon" type={site.logo.favicon.endsWith('.svg') ? 'image/svg+xml' : site.logo.favicon.endsWith('.png') ? 'image/png' : undefined} href={withBase(site.logo.favicon)} />
+      : <link rel="icon" type="image/svg+xml" href={withBase('/favicon.svg')} />}
+    <title>{pageTitle(title)}</title>
+
+    {/* Canonical + feed */}
+    <link rel="canonical" href={canonical} />
+    <link rel="alternate" type="application/rss+xml" title={site.masthead} href={withBase('/rss.xml')} />
+
+    {/* Open Graph */}
+    <meta property="og:site_name" content={site.masthead} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImageUrl} />
+    <meta property="og:locale" content="en_GB" />
+
+    {/* Twitter / X card */}
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageUrl} />
+
+    <ViewTransitions />
+    {siteDesignCss && <style is:inline set:html={siteDesignCss}></style>}
+  </head>
+  <body data-default-theme={site.defaultTheme}>
+    {progress && <div class="progress-bar" id="progress-bar"></div>}
+
+    <SiteHeader theme={blogTheme} name={site.name} logo={site.logo} context={professional.eyebrow} nav={nav} navLabel={navLabel} isCurrent={isCurrent} />
+
+    <main>
+      <slot />
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <span>© {new Date().getFullYear()} {site.name}</span>
+        <nav aria-label="Footer">
+          {nav.map((item) => <a href={withBase(item.href)}>{navLabel(item)}</a>)}
+          <a href={withBase('/rss.xml')}>RSS</a>
+        </nav>
+        {socialLinks.length > 0 && (
+          <div class="footer-socials">
+            {socialLinks.map((s) => (
+              <a href={s.url} aria-label={s.name} target="_blank" rel="noopener me"><Icon name={s.icon} size={20} /></a>
+            ))}
+          </div>
+        )}
+      </div>
+    </footer>
+
+    {/* Kids: floating dyslexia-friendly reading toggle */}
+    {isKidsTheme && (
+      <button class="kids-aa" id="kids-aa" type="button" aria-pressed="false" aria-label="Turn on easier-reading font" title="Easier reading">
+        <span class="kids-aa-dot" aria-hidden="true"></span>
+        A<small>a</small>
+      </button>
+    )}
+
+    <script>
+      import { gsap } from 'gsap';
+      import { ScrollTrigger } from 'gsap/ScrollTrigger';
+      import { initLightbox } from '../scripts/lightbox.js';
+
+      gsap.registerPlugin(ScrollTrigger);
+
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      function initNav() {
+        const toggle = document.getElementById('nav-toggle');
+        const navEl = document.getElementById('site-nav');
+        if (!toggle || !navEl || toggle.dataset.bound) return;
+        toggle.dataset.bound = '1';
+        const setOpen = (open: boolean) => { navEl.classList.toggle('open', open); toggle.setAttribute('aria-expanded', String(open)); };
+        toggle.addEventListener('click', () => setOpen(!navEl.classList.contains('open')));
+        navEl.addEventListener('click', (e) => { if ((e.target as HTMLElement).closest('a')) setOpen(false); });
+        toggle.closest('header')?.addEventListener('keydown', (e) => {
+          if ((e as KeyboardEvent).key === 'Escape') { setOpen(false); toggle.focus(); }
+        });
+      }
+
+      // Topic nav <details> accordions: open as a static sidebar on desktop, collapsed
+      // on mobile. Sync on load and only when crossing the 880px breakpoint (not on every
+      // mobile scroll-resize), so a reader's manual toggle survives scrolling.
+      const topicMq = window.matchMedia('(min-width: 881px)');
+      function syncTopicAcc() {
+        document.querySelectorAll<HTMLDetailsElement>('.topic-acc').forEach((d) => {
+          d.open = topicMq.matches;
+        });
+      }
+      let topicMqBound = false;
+      function initTopicAcc() {
+        syncTopicAcc();
+        if (!topicMqBound) {
+          topicMqBound = true;
+          topicMq.addEventListener('change', syncTopicAcc);
+        }
+      }
+
+      function initReveals() {
+        if (reducedMotion) return;
+        document.querySelectorAll<HTMLElement>('[data-reveal]:not([data-revealed])').forEach((el) => {
+          el.dataset.revealed = '1';
+          const dir = el.dataset.reveal; // '', 'left', 'right', 'scale'
+          const delay = parseFloat(el.dataset.delay || '0');
+          const from: gsap.TweenVars = { opacity: 0, duration: 0.9, ease: 'power3.out', delay };
+          if (dir === 'left') from.x = -36;
+          else if (dir === 'right') from.x = 36;
+          else if (dir === 'scale') from.scale = 0.92;
+          else from.y = 34;
+          gsap.from(el, {
+            ...from,
+            scrollTrigger: { trigger: el, start: 'top 88%', once: true },
+          });
+        });
+      }
+
+      function initCounters() {
+        document.querySelectorAll<HTMLElement>('[data-count]:not([data-counted])').forEach((el) => {
+          el.dataset.counted = '1';
+          const target = parseFloat(el.dataset.count || '0');
+          const suffix = el.dataset.suffix || '';
+          if (reducedMotion) { el.textContent = target + suffix; return; }
+          const obj = { v: 0 };
+          gsap.to(obj, {
+            v: target,
+            duration: 1.6,
+            ease: 'power2.out',
+            scrollTrigger: { trigger: el, start: 'top 90%', once: true },
+            onUpdate: () => { el.textContent = Math.round(obj.v) + suffix; },
+          });
+        });
+      }
+
+      function initTilt() {
+        if (reducedMotion || window.matchMedia('(hover: none)').matches) return;
+        document.querySelectorAll<HTMLElement>('[data-tilt]:not([data-tilted])').forEach((card) => {
+          card.dataset.tilted = '1';
+          const strength = 7;
+          card.addEventListener('pointermove', (e) => {
+            const r = card.getBoundingClientRect();
+            const px = (e.clientX - r.left) / r.width - 0.5;
+            const py = (e.clientY - r.top) / r.height - 0.5;
+            gsap.to(card, {
+              rotateY: px * strength,
+              rotateX: -py * strength,
+              transformPerspective: 700,
+              duration: 0.4,
+              ease: 'power2.out',
+            });
+          });
+          card.addEventListener('pointerleave', () => {
+            gsap.to(card, { rotateX: 0, rotateY: 0, duration: 0.6, ease: 'elastic.out(1, 0.6)' });
+          });
+        });
+      }
+
+      function initProgress() {
+        const bar = document.getElementById('progress-bar');
+        if (!bar || bar.dataset.bound) return;
+        bar.dataset.bound = '1';
+        let ticking = false;
+        const update = () => {
+          const doc = document.documentElement;
+          const max = doc.scrollHeight - window.innerHeight;
+          const p = max > 0 ? Math.min(1, window.scrollY / max) : 0;
+          bar.style.transform = `scaleX(${p})`;
+          ticking = false;
+        };
+        window.addEventListener('scroll', () => {
+          if (!ticking) { ticking = true; requestAnimationFrame(update); }
+        }, { passive: true });
+        update();
+      }
+
+      // Interactive blocks arrive as a .playground followed by an inert
+      // <script type="application/pg">. Move each pair into an opaque-origin
+      // iframe before executing it: the widget keeps working, but its code
+      // cannot read the blog page, cookies, storage, or other interactives.
+      const playgroundFrames = new Map<Window, HTMLIFrameElement>();
+      let playgroundResizeBound = false;
+      function bindPlaygroundResize() {
+        if (playgroundResizeBound) return;
+        playgroundResizeBound = true;
+        window.addEventListener('message', (event) => {
+          const frame = playgroundFrames.get(event.source as Window);
+          const data = event.data;
+          if (!frame || !data || data.type !== 'chapbook:playground-height') return;
+          const height = Math.max(180, Math.min(1600, Number(data.height) || 0));
+          if (height) frame.style.height = `${Math.ceil(height)}px`;
+        });
+      }
+      function initPlaygrounds() {
+        document.querySelectorAll<HTMLScriptElement>('script[type="application/pg"]:not([data-run])').forEach((s) => {
+          s.dataset.run = '1';
+          // The serializer emits wrapper → optional scoped <style> → inert script.
+          // Walk over that style rather than assuming the wrapper is adjacent.
+          const style = s.previousElementSibling instanceof HTMLStyleElement ? s.previousElementSibling : null;
+          const playground = style ? style.previousElementSibling : s.previousElementSibling;
+          if (!(playground instanceof HTMLElement) || !playground.classList.contains('playground')) return;
+
+          const computed = getComputedStyle(playground);
+          const vars = [
+            '--bg-0','--bg-1','--bg-2','--bg-3','--ink','--ink-dim','--ink-faint',
+            '--teal','--cyan','--violet','--line','--line-strong','--radius','--font-display',
+          ].map((name) => `${name}:${computed.getPropertyValue(name)};`).join('');
+          const id = `pg-frame-${Math.random().toString(36).slice(2)}`;
+          const code = (s.textContent || '').replace(/<\/script/gi, '<\\/script');
+          const widgetCss = (style?.textContent || '').replace(/<\/style/gi, '<\\/style');
+          const baseCss = `
+            :root{${vars}color-scheme:dark}
+            *{box-sizing:border-box}
+            html,body{margin:0;min-width:0;background:transparent;color:var(--ink-dim);
+              font:15px/1.55 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+            body{overflow:hidden}
+            button,input,select,textarea{font:inherit;color:inherit}
+            button{cursor:pointer}
+            .playground{margin:0;background:
+              radial-gradient(ellipse 80% 60% at 50% 0%,rgba(34,211,238,.07),transparent 60%),
+              linear-gradient(165deg,var(--bg-2),var(--bg-0));
+              border:1px solid rgba(34,211,238,.28);border-radius:var(--radius);
+              padding:1.4rem;box-shadow:inset 0 0 40px rgba(34,211,238,.04);overflow:auto}
+            .playground svg{width:100%;height:auto}
+            .pg-row{display:flex;flex-wrap:wrap;align-items:center;gap:1rem 1.6rem}
+            .playground label{display:block;font-family:var(--font-display);font-size:.78rem;
+              letter-spacing:.12em;text-transform:uppercase;color:var(--cyan);margin-bottom:.35em}
+            .pg-readout{font-family:var(--font-display);font-size:.92rem;color:var(--ink-dim);
+              border:1px solid var(--line-strong);border-radius:12px;
+              background:rgba(8,12,22,.8);padding:.6em 1em}
+            .pg-readout b{color:var(--ink);font-weight:600}
+          `;
+          const csp = "default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval'; "
+            + "style-src 'unsafe-inline'; img-src data: blob:; media-src data: blob:; font-src data:";
+          const resize = `
+            const report=()=>parent.postMessage({type:'chapbook:playground-height',
+              height:document.documentElement.scrollHeight},'*');
+            new ResizeObserver(report).observe(document.documentElement);
+            addEventListener('load',report);requestAnimationFrame(report);
+          `;
+          const frame = document.createElement('iframe');
+          frame.className = ['playground-frame', ...[...playground.classList].filter((x) => x !== 'playground')].join(' ');
+          frame.title = playground.getAttribute('aria-label') || 'Interactive block';
+          frame.setAttribute('sandbox', 'allow-scripts');
+          frame.setAttribute('data-pg-frame', id);
+          frame.loading = 'lazy';
+          for (const attr of ['style', 'data-align']) {
+            const value = playground.getAttribute(attr);
+            if (value != null) frame.setAttribute(attr, value);
+          }
+          frame.srcdoc = `<!doctype html><html><head><meta charset="utf-8">`
+            + `<meta http-equiv="Content-Security-Policy" content="${csp}">`
+            + `<meta name="viewport" content="width=device-width,initial-scale=1">`
+            + `<style>${baseCss}${widgetCss}</style></head><body>${playground.outerHTML}`
+            + `<script>${code}<\/script><script>${resize}<\/script></body></html>`;
+          playground.replaceWith(frame);
+          style?.remove();
+          s.remove();
+          if (frame.contentWindow) playgroundFrames.set(frame.contentWindow, frame);
+        });
+        bindPlaygroundResize();
+      }
+
+      function initSvgDraw() {
+        document.querySelectorAll<SVGElement>('[data-draw]:not([data-drawn])').forEach((svg) => {
+          (svg as unknown as HTMLElement).dataset.drawn = '1';
+          const io = new IntersectionObserver((entries) => {
+            entries.forEach((en) => {
+              if (en.isIntersecting) {
+                svg.classList.add('is-inview');
+                io.disconnect();
+              }
+            });
+          }, { threshold: 0.3 });
+          io.observe(svg);
+        });
+      }
+
+      // The Helm figures (<figure class="fig" data-draw>) carry a self-contained
+      // inline SVG whose CSS already autoplays the fig-draw line-draw on load —
+      // this works with JS off. This is only a timing nicety: replay the draw when
+      // the figure scrolls into view so the stroke animates where the reader sees it.
+      // No-op under reduced motion; never throws when there are no figures.
+      function initFigDraw() {
+        if (reducedMotion) return;
+        const figs = document.querySelectorAll<HTMLElement>('figure.fig[data-draw]:not([data-figdrawn])');
+        if (!figs.length) return;
+        figs.forEach((fig) => {
+          fig.dataset.figdrawn = '1';
+          const io = new IntersectionObserver((entries) => {
+            entries.forEach((en) => {
+              if (!en.isIntersecting) return;
+              fig.querySelectorAll<SVGElement>('.fig-stroke').forEach((stroke) => {
+                // briefly clear the animation, force a reflow, then let the
+                // inlined .fig-stroke rule re-run its keyframes from the start
+                stroke.style.animation = 'none';
+                void (stroke as unknown as HTMLElement).getBoundingClientRect();
+                stroke.style.animation = '';
+              });
+              io.disconnect();
+            });
+          }, { threshold: 0.25 });
+          io.observe(fig);
+        });
+      }
+
+      // Kids: dyslexia-friendly reading toggle (Atkinson Hyperlegible + open spacing).
+      // Toggles data-dyslexia on <html>; persisted in localStorage. Button is only
+      // rendered on kids themes.
+      function initKidsAa() {
+        const btn = document.getElementById('kids-aa');
+        if (!btn || btn.dataset.bound) return;
+        btn.dataset.bound = '1';
+        const sync = () => btn.setAttribute('aria-pressed', document.documentElement.dataset.dyslexia === '1' ? 'true' : 'false');
+        sync();
+        btn.addEventListener('click', () => {
+          const on = document.documentElement.dataset.dyslexia === '1';
+          if (on) delete document.documentElement.dataset.dyslexia;
+          else document.documentElement.dataset.dyslexia = '1';
+          try { localStorage.setItem('kids-dyslexia', on ? '0' : '1'); } catch (e) {}
+          sync();
+        });
+      }
+
+      // Kids: one-time celebratory starburst on the newest post card. Gated per-post
+      // via localStorage and skipped entirely under reduced motion + non-kids themes.
+      function initCelebrate() {
+        if (reducedMotion) return;
+        const KIDS = ['doodle', 'rocket', 'pixel', 'comic'];
+        if (!KIDS.includes(document.documentElement.dataset.blogTheme || '')) return;
+        const card = document.querySelector('.post-card[data-newest-slug]') as HTMLElement | null;
+        if (!card) return;
+        const slug = card.getAttribute('data-newest-slug');
+        if (!slug) return;
+        const key = 'kids-burst-' + slug;
+        try { if (localStorage.getItem(key) === '1') return; } catch (e) { return; }
+        try { localStorage.setItem(key, '1'); } catch (e) {}
+        window.setTimeout(() => {
+          card.classList.add('celebrate');
+          card.addEventListener('animationend', () => card.classList.remove('celebrate'), { once: true });
+        }, 450);
+      }
+
+      function initAll() {
+        initKidsAa();
+        initCelebrate();
+        initNav();
+        initTopicAcc();
+        initReveals();
+        initCounters();
+        initTilt();
+        initProgress();
+        initPlaygrounds();
+        initSvgDraw();
+        initFigDraw();
+        initLightbox();
+        ScrollTrigger.refresh();
+      }
+
+      document.addEventListener('astro:page-load', initAll);
+      // On a direct static-page load, Astro's initial page-load event may fire
+      // before this hoisted module has registered its listener. Interactives are
+      // security-sensitive, so sandbox them immediately as well; the selector is
+      // idempotent and later client-side navigations still use initAll.
+      initPlaygrounds();
+      document.addEventListener('astro:before-swap', () => {
+        ScrollTrigger.getAll().forEach((t) => t.kill());
+        playgroundFrames.clear();
+      });
+    </script>
+  </body>
+</html>

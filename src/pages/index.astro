@@ -1,0 +1,183 @@
+---
+import Base from '../layouts/Base.astro';
+import topics from '../data/topics.json';
+import themesRegistry from '../data/themes.json';
+import profile from '../data/profile.json';
+import {postCover} from '../lib/post-cover.mjs';
+import { site } from '../lib/site';
+import { safeBookingUrl } from '../lib/professional.mjs';
+import { withBase } from '../lib/withBase';
+import { getCollection } from 'astro:content';
+import type { HomeProps, HomePost, HomeConstellation } from '../lib/home';
+import { vocabFor, topicName, SEED_TAGLINE } from '../lib/vocab';
+import BlockPage from '../components/BlockPage.astro';
+import { blockPage } from '../lib/pages/site-pages';
+// A Home page built in Chapbook's page editor replaces the theme's own home page.
+const homeBlocks = blockPage('home');
+
+// --- per-archetype homepages ---------------------------------------------
+// Every theme's `hero` archetype (src/data/themes.json) selects a STRUCTURALLY
+// distinct first screen. The interlocked-rings WebGL hero (archetype `rings`) is
+// reserved for `observatory`. Adding a theme with a new archetype = add its
+// Home component here + a `hero` id in the registry.
+import HomeRings from '../components/home/HomeRings.astro';
+import HomeIndex from '../components/home/HomeIndex.astro';
+import HomeSolo from '../components/home/HomeSolo.astro';
+import HomeBlueprintBoard from '../components/home/HomeBlueprintBoard.astro';
+import HomeFrontPage from '../components/home/HomeFrontPage.astro';
+import HomeEssayCover from '../components/home/HomeEssayCover.astro';
+import HomeNewsWall from '../components/home/HomeNewsWall.astro';
+import HomeDesertArchive from '../components/home/HomeDesertArchive.astro';
+import HomeMarquee from '../components/home/HomeMarquee.astro';
+import HomeCollage from '../components/home/HomeCollage.astro';
+import HomePinboard from '../components/home/HomePinboard.astro';
+import HomeWoodlandChronicle from '../components/home/HomeWoodlandChronicle.astro';
+import HomeNotebook from '../components/home/HomeNotebook.astro';
+import HomeMissionControl from '../components/home/HomeMissionControl.astro';
+import HomePixelQuest from '../components/home/HomePixelQuest.astro';
+import HomeManga from '../components/home/HomeManga.astro';
+import HomeFieldAtlas from '../components/home/HomeFieldAtlas.astro';
+import HomeLightbox from '../components/home/HomeLightbox.astro';
+import HomeContactSheet from '../components/home/HomeContactSheet.astro';
+import HomePhotoPile from '../components/home/HomePhotoPile.astro';
+import HomeFolio from '../components/home/HomeFolio.astro';
+import HomePortrait from '../components/home/HomePortrait.astro';
+import HomeBusiness from '../components/home/HomeBusiness.astro';
+
+const HOMES: Record<string, any> = {
+  folio: HomeFolio,
+  practice: HomeBusiness,
+  petal: HomeBusiness,
+  contour: HomeBusiness,
+  cut: HomeBusiness,
+  still: HomeBusiness,
+  office: HomeBusiness,
+  portrait: HomePortrait,
+  table: HomeBusiness,
+  trade: HomeBusiness,
+  clinic: HomeBusiness,
+  pulse: HomeBusiness,
+  counsel: HomeBusiness,
+  shopfront: HomeBusiness,
+  rings: HomeRings,
+  index: HomeIndex,
+  solo: HomeSolo,
+  'blueprint-board': HomeBlueprintBoard,
+  frontpage: HomeFrontPage,
+  'essay-cover': HomeEssayCover,
+  'news-wall': HomeNewsWall,
+  'desert-scroll': HomeDesertArchive,
+  marquee: HomeMarquee,
+  collage: HomeCollage,
+  pinboard: HomePinboard,
+  'woodland-trail': HomeWoodlandChronicle,
+  notebook: HomeNotebook,
+  'mission-control': HomeMissionControl,
+  'pixel-quest': HomePixelQuest,
+  manga: HomeManga,
+  'field-atlas': HomeFieldAtlas,
+  lightbox: HomeLightbox,
+  'contact-sheet': HomeContactSheet,
+  'photo-pile': HomePhotoPile,
+};
+
+// The active blog theme (must match Base.astro's data-blog-theme resolution).
+const blogTheme = site.defaultTheme || 'observatory';
+const entry = themesRegistry.themes.find((t) => t.id === blogTheme);
+const archetype = (entry as any)?.hero || 'rings';
+const Home = HOMES[archetype] || HomeRings;
+
+// --- shape the collection ONCE for whichever Home renders ------------------
+const rawPosts = (await getCollection('blog', ({ data }) => !data.draft))
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+const vocab = vocabFor(blogTheme);
+const broad = new Map(topics.map((t) => [t.tag, t]));
+const coverModules = import.meta.glob('../content/blog/_images/**/*.{jpg,jpeg,png,webp,avif,gif,svg}', {eager:true,query:'?url',import:'default'});
+const coverAssets = Object.fromEntries(Object.entries(coverModules).map(([path,url])=>[path.replace('../content/blog/',''),url]));
+const posts: HomePost[] = rawPosts.map((p) => {
+  const topicTag = p.data.tags.find((t) => broad.has(t));
+  const bt = topicTag ? broad.get(topicTag)! : null;
+  return {
+    slug: p.slug,
+    image: postCover(p.data,p.body,coverAssets,import.meta.env.BASE_URL),
+    href: withBase(`/blog/${p.slug}/`),
+    title: p.data.title,
+    description: p.data.description,
+    date: p.data.date,
+    tags: p.data.tags,
+    accent: p.data.accent,
+    glyph: p.data.glyph,
+    topic: bt ? { name: topicName(vocab, bt.tag, bt.name), color: bt.color, tag: bt.tag } : null,
+    interactive: p.data.tags.includes('interactive'),
+    readMins: Math.max(1, Math.round((p.body || '').split(/\s+/).filter(Boolean).length / 200)),
+  };
+});
+
+const tagCount = (tag: string) => posts.filter((p) => p.tags.includes(tag)).length;
+const constellations: HomeConstellation[] = topics.map((t) => ({
+  name: topicName(vocab, t.tag, t.name),
+  subtitle: t.subtitle,
+  tag: t.tag,
+  color: t.color,
+  blurb: (t as any).blurb ?? '',
+  count: tagCount(t.tag),
+  href: withBase(`/c/${t.tag}/`),
+}));
+
+// The user's own tagline always wins; the theme's demo tagline only fills in for the
+// untouched seed placeholder so each catalogue preview reads in its own voice.
+const tagline = site.tagline && site.tagline !== SEED_TAGLINE ? site.tagline : (vocab.tagline || site.tagline);
+
+const homeProps: HomeProps = {
+  posts,
+  topics: constellations,
+  masthead: site.masthead,
+  tagline,
+  name: site.name,
+  postsHref: withBase('/posts/'),
+  aboutHref: withBase('/about/'),
+  observatoryHref: withBase('/observatory/'),
+  newsletterEndpoint: safeBookingUrl(site.newsletter.endpoint),
+  postsTitle: vocab.postsTitle,
+  topicsLabel: vocab.topicsLabel,
+  aboutLabel: vocab.aboutLabel,
+};
+
+// --- SEO/AEO: WebSite + Person JSON-LD for the home page ---
+const cleanSocials = Object.values(site.socials).filter((u) => typeof u === 'string' && /^https:\/\//.test(u));
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebSite',
+      '@id': `${site.url}/#website`,
+      url: `${site.url}/`,
+      name: site.masthead,
+      description: site.description,
+      inLanguage: 'en-GB',
+      publisher: { '@id': `${site.url}/#person` },
+    },
+    {
+      '@type': 'Person',
+      '@id': `${site.url}/#person`,
+      name: site.name,
+      jobTitle: profile.role === 'What you do' ? undefined : (profile.role || undefined),
+      url: `${site.url}/`,
+      description: profile.tagline === 'A short line about you and this blog.' ? site.description : profile.tagline,
+      worksFor: { '@type': 'Organisation', name: profile.trust },
+      ...(cleanSocials.length ? { sameAs: cleanSocials } : {}),
+    },
+  ],
+};
+---
+{homeBlocks ? (
+  <BlockPage page={homeBlocks} title={site.masthead} description={homeBlocks.description || undefined}>
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd).replace(/</g,'\\u003c')} />
+  </BlockPage>
+) : (
+<Base title={site.masthead} progress>
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd).replace(/</g,'\\u003c')} />
+  <Home {...homeProps} />
+</Base>
+)}

@@ -1,0 +1,59 @@
+/* ============================================================
+   Blog theme catalogue — aggregator
+   Each theme is scoped [data-blog-theme="<id>"] and overrides the
+   design-token layer (and adds structural CSS) from global.css.
+   Imported once by Base.astro AFTER global.css so themes win by
+   source order. The base "observatory" look needs no rules — an
+   unset/unknown/observatory id renders global.css unchanged.
+   Loaded on every page; only the active id's rules take effect.
+   ============================================================ */
+
+/* Clean & Simple */
+@import './themes/folio.css';
+@import './themes/practice.css';
+
+@import './professional.css';
+@import './themes/observatory.css';
+@import './themes/ledger.css';
+@import './themes/air.css';
+@import './themes/blueprint-workshop.css';
+
+/* Editorial */
+@import './themes/broadsheet.css';
+@import './themes/journal.css';
+@import './themes/kiosk.css';
+@import './themes/desert-archive.css';
+
+/* Creative & Fun */
+@import './themes/neon.css';
+@import './themes/zine.css';
+@import './themes/scrapbook.css';
+@import './themes/woodland-chronicle.css';
+
+/* Kids & First Blogs (ages 10–15) */
+@import './themes/doodle.css';
+@import './themes/rocket.css';
+@import './themes/pixel.css';
+@import './themes/comic.css';
+
+/* Photo & Portfolio */
+@import './themes/field-atlas.css';
+@import './themes/darkroom.css';
+@import './themes/contact-sheet.css';
+@import './themes/polaroid.css';
+
+/* Kids extras: dyslexia-friendly toggle + newest-post starburst */
+@import './themes/_kids-extras.css';
+
+@import "./themes/petal.css";
+@import "./themes/contour.css";
+@import "./themes/cut.css";
+@import "./themes/table.css";
+@import "./themes/trade.css";
+@import "./themes/clinic.css";
+@import "./themes/pulse.css";
+@import "./themes/counsel.css";
+@import "./themes/shopfront.css";
+@import "./themes/still.css";
+@import "./themes/office.css";
+@import "./themes/portrait.css";
