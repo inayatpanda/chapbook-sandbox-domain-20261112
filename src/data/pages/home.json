@@ -1,0 +1,204 @@
+{
+  "v": 1,
+  "title": "Home",
+  "slug": "home",
+  "menu": {
+    "show": true,
+    "label": "Home"
+  },
+  "description": "",
+  "template": "table-home-counter",
+  "look": {},
+  "blocks": [
+    {
+      "id": "xwfen3qtwg",
+      "type": "notice",
+      "role": "notice",
+      "variant": "ribbon",
+      "style": {
+        "bg": "none",
+        "width": "normal",
+        "space": "m",
+        "align": "left"
+      },
+      "data": {
+        "text": "Fresh bread from 7 every morning."
+      },
+      "sample": true,
+      "origin": "table-home-counter/notice"
+    },
+    {
+      "id": "b1",
+      "type": "hero",
+      "role": "hero",
+      "variant": "split",
+      "style": {
+        "bg": "none",
+        "width": "normal",
+        "space": "m",
+        "align": "left"
+      },
+      "data": {
+        "kicker": "Harbour Bakery",
+        "heading": "Harbour Bakery"
+      }
+    },
+    {
+      "id": "xwfenpbcgh",
+      "type": "services",
+      "role": "services",
+      "variant": "cards",
+      "style": {
+        "bg": "none",
+        "width": "normal",
+        "space": "m",
+        "align": "left"
+      },
+      "data": {
+        "heading": "From the oven",
+        "items": [
+          {
+            "id": "i1",
+            "name": "Harbour loaf",
+            "description": "Two-day ferment, dark crust.",
+            "price": "£4.50",
+            "picture": {
+              "src": "/site-images/cbp-table-g1.webp",
+              "alt": "A plate of food",
+              "credit": {
+                "creator": "",
+                "title": "",
+                "license": "cc0",
+                "page": ""
+              }
+            }
+          },
+          {
+            "id": "i2",
+            "name": "Cardamom bun",
+            "description": "Our best seller since day one.",
+            "price": "£3.20",
+            "picture": {
+              "src": "/site-images/cbp-table-g3.webp",
+              "alt": "A bowl of noodles",
+              "credit": {
+                "creator": "",
+                "title": "",
+                "license": "cc0",
+                "page": ""
+              }
+            }
+          },
+          {
+            "id": "i3",
+            "name": "Celebration cakes",
+            "description": "Order three days ahead.",
+            "price": "from £35",
+            "picture": {
+              "src": "/site-images/cbp-table-hero.webp",
+              "alt": "The café seating",
+              "credit": {
+                "creator": "",
+                "title": "",
+                "license": "cc0",
+                "page": ""
+              }
+            }
+          }
+        ]
+      },
+      "sample": true,
+      "origin": "table-home-counter/services"
+    },
+    {
+      "id": "xwfenvwbbi",
+      "type": "facts",
+      "role": "facts",
+      "variant": "row",
+      "style": {
+        "bg": "tint",
+        "width": "normal",
+        "space": "m",
+        "align": "left"
+      },
+      "data": {
+        "items": [
+          {
+            "id": "i1",
+            "value": "7am",
+            "label": "open every day"
+          },
+          {
+            "id": "i2",
+            "value": "2",
+            "label": "days to make our sourdough"
+          },
+          {
+            "id": "i3",
+            "value": "0",
+            "label": "preservatives"
+          }
+        ]
+      },
+      "sample": true,
+      "origin": "table-home-counter/facts"
+    },
+    {
+      "id": "xwfenyrubk",
+      "type": "contact",
+      "role": "contact",
+      "variant": "card",
+      "style": {
+        "bg": "none",
+        "width": "normal",
+        "space": "m",
+        "align": "left"
+      },
+      "data": {
+        "heading": "Opening times",
+        "business": true
+      },
+      "sample": true,
+      "origin": "table-home-counter/contact"
+    }
+  ],
+  "spare": [
+    {
+      "id": "b2",
+      "type": "cta",
+      "role": "about-link",
+      "variant": "minimal",
+      "style": {
+        "bg": "none",
+        "width": "normal",
+        "space": "m",
+        "align": "left"
+      },
+      "data": {
+        "heading": "Our story",
+        "buttons": [
+          {
+            "label": "Read more",
+            "href": "/about/"
+          }
+        ]
+      }
+    },
+    {
+      "id": "b3",
+      "type": "posts",
+      "role": "posts",
+      "variant": "list",
+      "style": {
+        "bg": "none",
+        "width": "normal",
+        "space": "m",
+        "align": "left"
+      },
+      "data": {
+        "heading": "News",
+        "count": 3
+      }
+    }
+  ]
+}
