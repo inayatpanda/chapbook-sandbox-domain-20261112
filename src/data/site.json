@@ -1,10 +1,10 @@
 {
-  "name": "Your Name",
-  "masthead": "Your Blog Name",
-  "tagline": "A line about your blog.",
-  "description": "A sentence describing your blog — used for SEO and social cards.",
+  "name": "Harbour Bakery",
+  "masthead": "Harbour Bakery",
+  "tagline": "",
+  "description": "Harbour Bakery",
   "url": "https://inayatpanda.github.io/chapbook-sandbox-domain-20261112/",
-  "defaultTheme": "observatory",
+  "defaultTheme": "shopfront",
   "postBadges": "icon",
   "core": "tori",
   "nav": [
@@ -14,28 +14,14 @@
       "primary": true
     },
     {
-      "href": "/observatory/",
-      "label": "Observatory",
-      "primary": true,
-      "themeLabel": true
-    },
-    {
-      "href": "/posts/",
-      "label": "Posts",
-      "primary": true
-    },
-    {
-      "href": "/darkroom/",
-      "label": "Darkroom",
-      "primary": true
-    },
-    {
       "href": "/about/",
-      "label": "About"
+      "label": "About",
+      "primary": true
     },
     {
       "href": "/contact/",
-      "label": "Contact"
+      "label": "Contact",
+      "primary": true
     }
   ],
   "socials": {
