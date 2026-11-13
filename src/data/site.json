@@ -39,7 +39,6 @@
     "phone": "01202 555 123",
     "email": "hello@harbourbakery.example",
     "location": "4 Quay Street, Poole BH15 1HJ",
-    "hours": "Mon to Sat 7am to 4pm",
-    "bookingUrl": "https://cal.com/harbour-bakery-test/table"
+    "hours": "Mon to Sat 7am to 4pm"
   }
 }
