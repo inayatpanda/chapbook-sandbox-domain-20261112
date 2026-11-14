@@ -31,9 +31,10 @@
     "endpoint": ""
   },
   "professional": {
-    "phone": "01202 555 123",
-    "email": "hello@harbourbakery.example",
-    "location": "4 Quay Street, Poole BH15 1HJ",
-    "hours": "Mon to Sat 7am to 4pm"
+    "phone": "01202 555 0199",
+    "email": "hello@quaycutters.example",
+    "location": "12 The Quay, Poole BH15 1HJ",
+    "hours": "Tue to Sat, 9am to 6pm",
+    "bookingUrl": "https://cal.com/rick/get-rick-rolled"
   }
 }
