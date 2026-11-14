@@ -7,11 +7,20 @@
     "label": "Home"
   },
   "description": "",
-  "template": "table-home-counter",
-  "look": {},
+  "template": "cut-home-chair",
+  "look": {
+    "motion": {
+      "scroll": "slide",
+      "heading": "letters",
+      "buttons": "fill",
+      "pictures": "unveil",
+      "count": true,
+      "preset": "bold"
+    }
+  },
   "blocks": [
     {
-      "id": "xwfen3qtwg",
+      "id": "rye1hp30ec",
       "type": "notice",
       "role": "notice",
       "variant": "ribbon",
@@ -22,16 +31,16 @@
         "align": "left"
       },
       "data": {
-        "text": "Fresh bread from 7 every morning."
+        "text": "Walk-ins welcome Tuesday to Friday before 11."
       },
       "sample": true,
-      "origin": "table-home-counter/notice"
+      "origin": "cut-home-chair/notice"
     },
     {
       "id": "b1",
       "type": "hero",
       "role": "hero",
-      "variant": "split",
+      "variant": "poster",
       "style": {
         "bg": "none",
         "width": "normal",
@@ -39,15 +48,161 @@
         "align": "left"
       },
       "data": {
-        "kicker": "Harbour Bakery",
-        "heading": "Harbour Bakery"
+        "heading": "Quay Cutters",
+        "buttons": [
+          {
+            "label": "Book a chair",
+            "href": "@booking"
+          }
+        ]
       }
     },
     {
-      "id": "xwfenpbcgh",
+      "id": "rye1htg2jd",
+      "type": "gallery",
+      "role": "gallery",
+      "variant": "strip",
+      "style": {
+        "bg": "none",
+        "width": "full",
+        "space": "s",
+        "align": "left"
+      },
+      "data": {
+        "pictures": [
+          {
+            "src": "/site-images/cbp-cut-hero.webp",
+            "alt": "The barber shop with its old chairs",
+            "credit": {
+              "creator": "",
+              "title": "",
+              "license": "cc0",
+              "page": ""
+            }
+          },
+          {
+            "src": "/site-images/cbp-cut-g3.webp",
+            "alt": "Clippers and combs on the counter",
+            "credit": {
+              "creator": "",
+              "title": "",
+              "license": "cc0",
+              "page": ""
+            }
+          },
+          {
+            "src": "/site-images/cbp-cut-g2.webp",
+            "alt": "Scissors and combs on yellow",
+            "credit": {
+              "creator": "",
+              "title": "",
+              "license": "cc0",
+              "page": ""
+            }
+          },
+          {
+            "src": "/site-images/cbp-cut-g1.webp",
+            "alt": "Mirrors and chairs",
+            "credit": {
+              "creator": "",
+              "title": "",
+              "license": "cc0",
+              "page": ""
+            }
+          }
+        ]
+      },
+      "sample": true,
+      "origin": "cut-home-chair/gallery"
+    },
+    {
+      "id": "rye1istawe",
       "type": "services",
       "role": "services",
-      "variant": "cards",
+      "variant": "menu",
+      "style": {
+        "bg": "dark",
+        "width": "normal",
+        "space": "m",
+        "align": "left"
+      },
+      "data": {
+        "heading": "Prices",
+        "items": [
+          {
+            "id": "i1",
+            "name": "Skin fade",
+            "price": "£24",
+            "duration": "40 min",
+            "link": {
+              "label": "Book with Dev",
+              "href": "https://cal.com/rick/get-rick-rolled"
+            },
+            "pay": {
+              "label": "Pay now",
+              "href": "https://buy.stripe.com/test_cut123"
+            }
+          },
+          {
+            "id": "i2",
+            "name": "Scissor cut",
+            "price": "£24",
+            "duration": "40 min",
+            "link": {
+              "label": "Book with Marco",
+              "href": "https://i.cal.com/peer/15"
+            },
+            "pay": {
+              "label": "Pay deposit",
+              "href": "https://paypal.me/quaycutters/24"
+            }
+          },
+          {
+            "id": "i3",
+            "name": "Cut and beard",
+            "price": "£30",
+            "duration": "50 min",
+            "link": {
+              "label": "Book with Kyle",
+              "href": "https://calendar.app.google/AbCdEf123"
+            },
+            "pay": {
+              "label": "Buy",
+              "href": "https://www.paypal.com/ncp/payment/ABCDEFGH12345"
+            }
+          },
+          {
+            "id": "i4",
+            "name": "Hot towel shave",
+            "price": "£22",
+            "duration": "30 min",
+            "link": {
+              "label": "Book",
+              "href": "@booking"
+            }
+          },
+          {
+            "id": "i5",
+            "name": "Kids (under 12)",
+            "price": "£15",
+            "duration": "25 min"
+          },
+          {
+            "id": "i6",
+            "name": "Beard trim",
+            "price": "£12",
+            "duration": "15 min"
+          }
+        ]
+      },
+      "sample": true,
+      "origin": "cut-home-chair/services"
+    },
+    {
+      "id": "rye1ioawzf",
+      "type": "team",
+      "role": "team",
+      "variant": "grid",
       "style": {
         "bg": "none",
         "width": "normal",
@@ -55,96 +210,105 @@
         "align": "left"
       },
       "data": {
-        "heading": "From the oven",
+        "heading": "Barbers",
         "items": [
           {
             "id": "i1",
-            "name": "Harbour loaf",
-            "description": "Two-day ferment, dark crust.",
-            "price": "£4.50",
-            "picture": {
-              "src": "/site-images/cbp-table-g1.webp",
-              "alt": "A plate of food",
-              "credit": {
-                "creator": "",
-                "title": "",
-                "license": "cc0",
-                "page": ""
-              }
+            "name": "Dev Patel",
+            "role": "Owner",
+            "link": {
+              "label": "Book with Dev",
+              "href": "https://cal.com/rick/get-rick-rolled"
             }
           },
           {
             "id": "i2",
-            "name": "Cardamom bun",
-            "description": "Our best seller since day one.",
-            "price": "£3.20",
-            "picture": {
-              "src": "/site-images/cbp-table-g3.webp",
-              "alt": "A bowl of noodles",
-              "credit": {
-                "creator": "",
-                "title": "",
-                "license": "cc0",
-                "page": ""
-              }
+            "name": "Marco Rossi",
+            "role": "Senior barber",
+            "link": {
+              "label": "Book with Marco",
+              "href": "https://i.cal.com/peer/15"
             }
           },
           {
             "id": "i3",
-            "name": "Celebration cakes",
-            "description": "Order three days ahead.",
-            "price": "from £35",
-            "picture": {
-              "src": "/site-images/cbp-table-hero.webp",
-              "alt": "The café seating",
-              "credit": {
-                "creator": "",
-                "title": "",
-                "license": "cc0",
-                "page": ""
-              }
+            "name": "Kyle James",
+            "role": "Barber",
+            "link": {
+              "label": "Book with Kyle",
+              "href": "https://calendar.app.google/AbCdEf123"
             }
           }
         ]
       },
       "sample": true,
-      "origin": "table-home-counter/services"
+      "origin": "cut-home-chair/team"
     },
     {
-      "id": "xwfenvwbbi",
-      "type": "facts",
-      "role": "facts",
-      "variant": "row",
+      "id": "s2s5fp2arh",
+      "type": "booking",
+      "role": "booking",
+      "variant": "calendar",
       "style": {
-        "bg": "tint",
+        "bg": "none",
         "width": "normal",
         "space": "m",
         "align": "left"
       },
       "data": {
+        "heading": "Book a chair",
+        "useSite": true
+      }
+    },
+    {
+      "id": "s42ja8we6i",
+      "type": "booking",
+      "role": "booking",
+      "variant": "calendar",
+      "style": {
+        "bg": "none",
+        "width": "normal",
+        "space": "m",
+        "align": "left"
+      },
+      "data": {
+        "heading": "Book with Marco",
+        "url": "https://i.cal.com/peer/15"
+      }
+    },
+    {
+      "id": "s4p0jw5hqj",
+      "type": "order",
+      "role": "order",
+      "variant": "list",
+      "style": {
+        "bg": "none",
+        "width": "normal",
+        "space": "m",
+        "align": "left"
+      },
+      "data": {
+        "heading": "Take something home",
         "items": [
           {
             "id": "i1",
-            "value": "7am",
-            "label": "open every day"
+            "name": "Matte clay, 100 ml",
+            "price": "£12"
           },
           {
             "id": "i2",
-            "value": "2",
-            "label": "days to make our sourdough"
-          },
-          {
-            "id": "i3",
-            "value": "0",
-            "label": "preservatives"
+            "name": "Gift voucher: skin fade",
+            "price": "£24"
           }
-        ]
-      },
-      "sample": true,
-      "origin": "table-home-counter/facts"
+        ],
+        "pay": {
+          "label": "Pay now",
+          "href": "https://buy.stripe.com/test_cut123"
+        }
+      }
     },
     {
-      "id": "xwfenyrubk",
+      "id": "b2",
       "type": "contact",
       "role": "contact",
       "variant": "card",
@@ -155,16 +319,14 @@
         "align": "left"
       },
       "data": {
-        "heading": "Opening times",
+        "heading": "Find us",
         "business": true
-      },
-      "sample": true,
-      "origin": "table-home-counter/contact"
+      }
     }
   ],
   "spare": [
     {
-      "id": "b2",
+      "id": "b3",
       "type": "cta",
       "role": "about-link",
       "variant": "minimal",
@@ -175,7 +337,7 @@
         "align": "left"
       },
       "data": {
-        "heading": "Our story",
+        "heading": "Meet the team",
         "buttons": [
           {
             "label": "Read more",
@@ -185,7 +347,7 @@
       }
     },
     {
-      "id": "b3",
+      "id": "b4",
       "type": "posts",
       "role": "posts",
       "variant": "list",
@@ -196,9 +358,46 @@
         "align": "left"
       },
       "data": {
-        "heading": "News",
+        "heading": "Notes & journal",
         "count": 3
       }
     }
-  ]
+  ],
+  "held": {
+    "reviews": [
+      {
+        "at": 8,
+        "block": {
+          "id": "rye1ip26jg",
+          "type": "reviews",
+          "role": "reviews",
+          "variant": "cards",
+          "style": {
+            "bg": "none",
+            "width": "normal",
+            "space": "m",
+            "align": "left"
+          },
+          "data": {
+            "items": [
+              {
+                "id": "i1",
+                "quote": "Best fade in Bournemouth, and they remember how you like it.",
+                "name": "Tyler",
+                "stars": 5
+              },
+              {
+                "id": "i2",
+                "quote": "Proper hot towel shave. Worth every penny.",
+                "name": "Graham",
+                "stars": 5
+              }
+            ]
+          },
+          "sample": true,
+          "origin": "cut-home-chair/reviews"
+        }
+      }
+    ]
+  }
 }
