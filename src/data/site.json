@@ -1,21 +1,16 @@
 {
-  "name": "Harbour Bakery",
-  "masthead": "Harbour Bakery",
+  "name": "Quay Cutters",
+  "masthead": "Quay Cutters",
   "tagline": "",
-  "description": "Harbour Bakery",
+  "description": "",
   "url": "https://inayatpanda.github.io/chapbook-sandbox-domain-20261112/",
-  "defaultTheme": "shopfront",
+  "defaultTheme": "cut",
   "postBadges": "icon",
   "core": "tori",
   "nav": [
     {
       "href": "/",
       "label": "Home",
-      "primary": true
-    },
-    {
-      "href": "/about/",
-      "label": "About",
       "primary": true
     },
     {
@@ -30,10 +25,10 @@
     "github": ""
   },
   "newsletter": {
-    "endpoint": "https://formspree.io/f/your-id"
+    "endpoint": ""
   },
   "contact": {
-    "endpoint": "https://formspree.io/f/your-id"
+    "endpoint": ""
   },
   "professional": {
     "phone": "01202 555 123",
